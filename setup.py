@@ -8,4 +8,8 @@ setup(name='cropping_lib',
       author_email='tbd',
       license='tbd',
       packages=['cropping_lib'],
+      scripts=['scripts/investigate_data.py',
+               'scripts/prepare_data.py',
+               'scripts/evaluate_model.py',
+               'scripts/train_model.py'],
       zip_safe=False)

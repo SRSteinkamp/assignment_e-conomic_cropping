@@ -1,7 +1,7 @@
 import pytest
 import os
 import numpy as np
-from cropping_lib.utils import get_data, load_image, transform_coords, preprocess_image
+from cropping_lib.utils import get_data, load_image, scale_coords_up, preprocess_image
 
 
 def test_load_image():
@@ -9,19 +9,19 @@ def test_load_image():
     tmp = load_image(os.path.dirname(__file__) + '/files/test_img.jpg')
 
 
-def test_transform_coords():
+def test_scale_coords_up():
     # Test if inputs are unaltered
-    assert np.alltrue(np.arange(8) == transform_coords(np.arange(8), 1, 1))
+    assert np.alltrue(np.arange(8) == scale_coords_up(np.arange(8), 1, 1))
 
     # Test width application
     test_array = np.ones(8)
     test_array[::2] -= 0.5
-    assert np.allclose(test_array, transform_coords(np.ones(8), 2, 1))
+    assert np.allclose(test_array, scale_coords_up(np.ones(8), 2, 1))
 
     # Test height application
     test_array = np.ones(8)
     test_array[1::2] -= 0.5
-    assert np.allclose(test_array, transform_coords(np.ones(8), 1, 2))
+    assert np.allclose(test_array, scale_coords_up(np.ones(8), 1, 2))
 
 
 def test_preprocess_image():

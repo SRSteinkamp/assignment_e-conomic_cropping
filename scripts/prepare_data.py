@@ -5,10 +5,9 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 from cropping_lib.utils import get_data, make_folder, make_set
 # %% Setting up Paths
-URL = 'https://github.com/e-conomic/hiring-assignments/raw/master/machinelearningteam/receipt-cropping/cropping_data.zip'
 PATH = 'cropping_data/mobile_images_cropping_ds/'
 
-get_data(URL, 'cropping_data')
+make_folder('data')
 
 # Reading data, adding a factor for stratification (fileype)
 cropped_coords = pd.read_csv(f'{PATH}cropped_coords.csv')
@@ -30,4 +29,4 @@ for set_csv, set_name in zip([train, test, validation],
                              ['train', 'test', 'validation']):
 
     make_folder(f'data/{set_name}')
-    make_set(set_csv, PATH, f'data/{set_name}/')
+    make_set(set_csv, PATH, f'data/{set_name}/', with_mask=True)
