@@ -8,7 +8,9 @@ from glob import glob
 
 
 def make_prediction(images, model):
-    # Create image batch, and preprocess images
+    '''
+    Preprocesses data and runs them through the provided model.
+    '''
     image_batch = np.array([preprocess_image(im.copy(),
                                             target_size=(224,224))
                             for im in images])
@@ -22,6 +24,10 @@ def make_prediction(images, model):
 
 
 def predict_files(FILEPATH, MODELPATH):
+    '''
+    Function later exposed to cli, to read in a single filename or a folder
+    and do prediction on the images.
+    '''
     # Load model
     model = keras.models.load_model(MODELPATH)
 
@@ -34,9 +40,9 @@ def predict_files(FILEPATH, MODELPATH):
         for suff in ['.jpg', '.jpeg', '.png']:
             images.extend(glob(FILEPATH  + '/*' + suff))
     else:
-        raise IOError(f"File or path {FILEPATH} not found!")
+        raise IOError(f"File or path: {FILEPATH} not found!")
 
-    # Make sure images are in alphabetical order (for testing...)
+    # Make sure images are ordered (for testing...)
     images = np.sort(images)
     images = [load_image(im) for im in images]
 

@@ -5,20 +5,22 @@ from cropping_data.predict import make_prediction
 import pandas as pd
 from PIL import Image, ImageDraw, ImageFont
 import numpy as np
+import tqdm.auto as tqdm
 
 MODELPATH = 'model/20200909_mobilenet/'
-make_folder(f'test_evaluation/{MODELPATH.split("/")[1]}')
+EVALPATH = f'test_evaluation/{MODELPATH.split("/")[1]}'
+make_folder(EVALPATH)
 
 rescaled, images = predict_files('data/test/', MODELPATH)
 
 test_csv = pd.read_csv('data/test.csv').sort_values('Filename')
-# %%
-for n, im in enumerate(images):
 
+for n, im in tqdm(enumerate(images)):
     # Reshape true coordinates
     poly = test_csv[get_bbox_names()].iloc[n].values.reshape(-1, 2).tolist()
     poly.append(poly[0])
     poly = np.array(poly)
+    # Flip coordinates
     poly[:, 1] = im.height - poly[:, 1]
     draw = ImageDraw.Draw(im)
     # Draw the ground truth
@@ -29,9 +31,9 @@ for n, im in enumerate(images):
     poly_test.append(poly_test[0])
     poly_test = np.array(poly_test)
     poly_test[:, 1] = im.height - poly_test[:, 1]
-
+    # Draw the prediction
     draw.line(tuple(map(tuple, poly_test)), fill='green', width=3)
+    # Store image in list
     images[n] = im
-
-    im.save(f'test_evaluation/{test_csv.iloc[n]["Filename"].split("/")[-1]}')
-# %%
+    # Save image
+    im.save(f'{EVALPATH}{test_csv.iloc[n]["Filename"].split("/")[-1]}')
