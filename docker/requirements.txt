@@ -7,3 +7,4 @@ scikit-image
 scikit-learn
 seaborn
 tqdm
+tensorflow-addons==0.9.1
