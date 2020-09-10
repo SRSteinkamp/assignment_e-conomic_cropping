@@ -11,5 +11,6 @@ setup(name='cropping_lib',
       scripts=['scripts/investigate_data.py',
                'scripts/prepare_data.py',
                'scripts/evaluate_model.py',
-               'scripts/train_model.py'],
+               'scripts/train_model.py',
+               'scripts/predict_cli.py'],
       zip_safe=False)

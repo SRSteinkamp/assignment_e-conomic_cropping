@@ -9,4 +9,4 @@ models
 logs
 *.pyc
 model
-test_evaluation
+evaluation_images
