@@ -1,4 +1,5 @@
-from cropping_lib.model_parts import DataGenerator, IOU_wrapper
+from cropping_lib.model_parts import DataGenerator, IOU_TwoBox
+from cropping_lib.model_parts import build_model, IOU_LargeBox
 import pandas as pd
 import tensorflow as tf
 import numpy as np
@@ -10,10 +11,23 @@ def test_smoke_DataGenerator():
     DataGenerator(df)
 
 
-def test_iou_wrapper():
+def test_IOU_TwoBox():
     # Test if iou_wrapper provides results:
     # TopLeftX,TopLeftY,TopRightX,TopRightY,BottomRightX,BottomRightY,BottomLeftX,BottomLeftY
     boxes1 = tf.constant([[0.1, 0.9, 0.9, 0.9, 0.9, 0.1, 0.1, 0.1],
                           [0.1, 0.9, 0.9, 0.9, 0.9, 0.1, 0.1, 0.1]])
 
-    assert np.isclose(0, np.sum(IOU_wrapper()(boxes1, boxes1)))
+    assert np.isclose(0, np.sum(IOU_TwoBox()(boxes1, boxes1)))
+
+
+def test_IOU_LargeBox():
+    # Test if iou_wrapper provides results:
+    boxes1 = tf.constant([[0.1, 0.9, 0.9, 0.9, 0.9, 0.1, 0.1, 0.1],
+                          [0.1, 0.9, 0.9, 0.9, 0.9, 0.1, 0.1, 0.1]])
+
+    assert np.isclose(0, np.sum(IOU_LargeBox()(boxes1, boxes1)))
+
+
+def test_smoke_model():
+    bn = build_model(weights=False)
+    bn.compile(optimizer='sgd', loss='mean_squared_error')
