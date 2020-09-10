@@ -1,28 +1,30 @@
 # %%
+import os
 import pandas as pd
 import tensorflow as tf
+import matplotlib.pyplot as plt
 from tensorflow import keras
-import numpy as np
-import os
-from PIL import Image
-from cropping_lib.model_parts import DataGenerator, IOU_wrapper, build_model
-from cropping_lib.utils import make_folder
+from cropping_lib.utils import check_working_dir
+from cropping_lib.model_parts import DataGenerator, IOU_TwoBox
+from cropping_lib.model_parts import IOU_LargeBox, build_model
+
 # %% Training settings
 LR = 0.001 # Learning Rate
-EPOCHS = 100 # Number of Epochs
-DATAPATH ='data/' # Data Location
-MODELPATH = 'model/mobilenetv2/' # The model to load
-MODELNAME = 'model/mobilenetv2/' # The model to save
+EPOCHS = 1 # Number of Epochs
+BASEPATH = check_working_dir(os.path.realpath(__file__))
+DATAPATH = BASEPATH + '/data/' # Data Location
+MODELPATH = BASEPATH + '/model/mobilenetv2/' # The model to load
+MODELNAME = BASEPATH + '/model/mobilenetv2/' # The model to save
 train_csv = pd.read_csv(f'{DATAPATH}/train.csv')
 valid_csv = pd.read_csv(f'{DATAPATH}/validation.csv')
 
 # Data generators for training and validation
-train_generator = DataGenerator(train_csv, batch_size=25)
+train_generator = DataGenerator(train_csv, batch_size=7)
 valid_generator = DataGenerator(valid_csv, batch_size=7, shuffle=False)
 
 # If the model does not exist: Initiate model, else reload previous model
 if not os.path.isdir(MODELPATH):
-    make_folder('model')
+    os.makedirs(BASEPATH + '/model', exist_ok=True)
     model = build_model(weights='imagenet', dropout=0.5)
 elif os.path.isdir(MODELPATH):
     model = keras.models.load_model(MODELPATH, compile=False)
@@ -31,7 +33,7 @@ else:
 
 # Prepare callbacks: Checkpoint to iteratively save model (just in case)
 cb_checkpoint = tf.keras.callbacks.ModelCheckpoint(
-    filepath='model',
+    filepath= MODELPATH,
     save_weights_only=False,
     monitor='val_loss',
     mode='min',
@@ -43,9 +45,10 @@ cb_reduceLR = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_loss', patience=
 
 # Compile model
 optimizer = keras.optimizers.Adam(learning_rate=LR)
-model.compile(optimizer=optimizer, loss = 'mean_absolute_error')
+model.compile(optimizer=optimizer, loss=IOU_TwoBox(),
+              metrics=['mean_absolute_error'])
 # Fit
-model.fit(train_generator, validation_data = valid_generator,
+history = model.fit(train_generator, validation_data = valid_generator,
           epochs=EPOCHS,
           callbacks=[cb_checkpoint, cb_earlystopping, cb_reduceLR])
 
@@ -54,3 +57,14 @@ model.fit(train_generator, validation_data = valid_generator,
 model.compile(optimizer=optimizer, loss='mean_squared_error')
 # And finally save the model
 model.save(MODELNAME)
+# %% Create figure from model history
+fig, axes = plt.subplots(1, 2, figsize=(15,5))
+axes[0].plot(history.history['loss'])
+axes[0].plot(history.history['val_loss'])
+axes[0].legend(['loss', 'validation loss'])
+axes[0].set_title('Loss')
+axes[1].plot(history.history['mean_absolute_error'])
+axes[1].plot(history.history['val_mean_absolute_error'])
+axes[1].legend(['MAE', 'validation MAE'])
+axes[1].set_title('Error')
+plt.savefig(MODELNAME + '/loss_curve.png')

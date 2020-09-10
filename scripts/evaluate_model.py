@@ -1,20 +1,24 @@
 # %%
-from predict import predict_files
-from cropping_lib.utils import make_folder, get_bbox_names
-from cropping_data.predict import make_prediction
+import os
 import pandas as pd
 from PIL import Image, ImageDraw, ImageFont
 import numpy as np
-import tqdm.auto as tqdm
+from cropping_lib.utils import get_bbox_names, create_mask, check_working_dir
+from cropping_lib.model_parts import predict_files
+from tqdm.auto import tqdm
+from sklearn.metrics import jaccard_score
+# %%
+BASEPATH = check_working_dir(os.path.realpath(__file__))
+MODELPATH = BASEPATH + '/model/mobilenetv2/'
+EVALPATH = BASEPATH + f'/evaluation_images/{MODELPATH.split("/")[-1]}'
+test_csv = pd.read_csv(BASEPATH + '/data/test.csv').sort_values('Filename')
 
-MODELPATH = 'model/20200909_mobilenet/'
-EVALPATH = f'test_evaluation/{MODELPATH.split("/")[1]}'
-make_folder(EVALPATH)
+os.makedirs(EVALPATH, exist_ok=True)
 
-rescaled, images = predict_files('data/test/', MODELPATH)
+rescaled, images = predict_files(BASEPATH + '/data/test/', MODELPATH)
 
-test_csv = pd.read_csv('data/test.csv').sort_values('Filename')
-
+evaluation_dict = {'Img': [], 'IOU': []}
+# %%
 for n, im in tqdm(enumerate(images)):
     # Reshape true coordinates
     poly = test_csv[get_bbox_names()].iloc[n].values.reshape(-1, 2).tolist()
@@ -36,4 +40,15 @@ for n, im in tqdm(enumerate(images)):
     # Store image in list
     images[n] = im
     # Save image
+
+    true_mask = create_mask(poly[:, 1], poly[:, 0], (im.height, im.width))
+    test_mask = create_mask(poly_test[:, 1], poly_test[:, 0], (im.height, im.width))
+
+    score = jaccard_score(true_mask.flatten(), test_mask.flatten())
+
+    evaluation_dict['Img'].append(test_csv.iloc[n]['Filename'])
+    evaluation_dict['IOU'].append(score)
     im.save(f'{EVALPATH}{test_csv.iloc[n]["Filename"].split("/")[-1]}')
+
+evaluation_dict = pd.DataFrame(evaluation_dict)
+evaluation_dict.to_csv(f'{EVALPATH}/scores.csv')
