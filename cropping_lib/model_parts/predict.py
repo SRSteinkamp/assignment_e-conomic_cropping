@@ -49,9 +49,9 @@ def predict_files(FILEPATH, MODELPATH):
     predictions = make_prediction(images, model)
     pred_rescaled = []
 
-    # Preprocess coordinates, return images
+    # Postprocess coordinates, return images
     for im, pre in zip(images, predictions):
-        tmp = scale_coords_down(pre.ravel(), 224, 224)
-        pred_rescaled.append(scale_coords_up(tmp, im.width, im.height))
+        tmp_scu = scale_coords_up(pre.ravel(), im.width, im.height)
+        pred_rescaled.append(tmp_scu)
 
     return pred_rescaled, images

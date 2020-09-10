@@ -4,7 +4,9 @@ from skimage.draw import polygon, polygon2mask
 from tensorflow import keras
 
 def load_image(img_path):
-    # Simply load a Pillow image, but convert to RGB
+    '''
+    Load Pillow image and transform it to RGB
+    '''
     return Image.open(img_path).convert('RGB')
 
 
