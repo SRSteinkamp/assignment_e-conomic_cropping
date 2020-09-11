@@ -42,7 +42,7 @@ Implementing a UNet (also based on MobileNetV2), to create a binary mask of the 
 
 #### Potential Issues
 * Needs postprocessing, especially if we want the corners
-* Slower, needs more compute (masks have to be resized, and post prrocessed), also possibly more data transfer.
+* Slower, needs more compute (masks have to be resized, and post processed), also possibly more data transfer.
 
 ### Computer Vision (rule based)
 
@@ -62,7 +62,7 @@ I wrote a very small library for this task, which should run following the `requ
 To reproduce my results, there are five scripts (which **must** be run in the directory where the repository is located). Scripts are stored in the `scripts` folder:
 
 * `download_data.py` - download and unzips the data-set from Github
-* `investigate_data.py` - does a rudimentary EDA (extracts some information from the imaes) and plots them in the downloaded `cropping_data` folder. It also draws the bounding boxes
+* `investigate_data.py` - does a rudimentary EDA (extracts some information from the images) and plots them in the downloaded `cropping_data` folder. It also draws the bounding boxes
 * `prepare_data.py` - prepares the dataset by removing odd images, stratifying the dataset and creating the directory `data`, with subfolders `train`, `test`, `validation` and `demonstration`, as well as the csvs `train.csv`, `test.csv`, `validation.csv`. The csvs contain the bounding box information and the fullpath to the images. `Demonstration` contains the discarded images.
 * `train_model.py` usess `train` and `validation` to train the neural network model, settings like learning rate and number of epochs are in the header.
 * `evaluate_model.py` finally uses the model and predicts bounding boxes for the images in `test`, also drawing the ground truth and predictions on the images, saving them in `evaluate_images`, it also stores the `IOU` between the ground truth and the prediction in `score.csv`.
