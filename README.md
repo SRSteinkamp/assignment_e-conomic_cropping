@@ -19,7 +19,7 @@ Use machine learning to find the four corners of a receipt on an image.
 
 ## Dataset intricracies
 
-* Bounding box is not rectangular. Eight instead of four corners
+* Bounding box is not rectangular. Eight targets for prediction (not four as typically)
 * Different image types
 * Few images, some not ideal
     * Bounding box not large enough
