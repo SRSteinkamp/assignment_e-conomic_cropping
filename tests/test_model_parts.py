@@ -29,5 +29,5 @@ def test_IOU_LargeBox():
 
 
 def test_smoke_model():
-    bn = build_model(weights=False)
+    bn = build_model(weights=None)
     bn.compile(optimizer='sgd', loss='mean_squared_error')
