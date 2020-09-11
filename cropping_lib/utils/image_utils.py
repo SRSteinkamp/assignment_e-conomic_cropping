@@ -30,7 +30,7 @@ def preprocess_image(image, target_size):
     image = image.resize(target_size, Image.NEAREST)
     # doing the preprocessing for mobile net here.
     image = np.array(image) / 255
-    # image = -1 + (image * 2)
+
     return image
 
 

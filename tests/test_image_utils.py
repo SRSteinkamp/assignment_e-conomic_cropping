@@ -50,7 +50,7 @@ def test_preprocess_image():
 
     # Test for scaling
     assert np.max([1, np.max(test_img)]) == 1
-    assert np.min([1, np.min(test_img)]) == -1
+    assert np.min([0, np.min(test_img)]) == 0
 
 
 def test_create_mask():
