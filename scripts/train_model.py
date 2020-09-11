@@ -15,8 +15,8 @@ LR = 0.01 # Learning Rate
 EPOCHS = 5000 # Number of Epochs
 BASEPATH = check_working_dir(os.path.realpath(__file__))
 DATAPATH = BASEPATH + '/data/' # Data Location
-MODELPATH = BASEPATH + '/model/mobilenet2/' # The model to load
-MODELNAME = BASEPATH + '/model/mobilenet2/' # The model to save
+MODELPATH = BASEPATH + '/model/mobilenetv2/' # The model to load
+MODELNAME = BASEPATH + '/model/mobilenetv2/' # The model to save
 train_csv = pd.read_csv(f'{DATAPATH}/train.csv')
 valid_csv = pd.read_csv(f'{DATAPATH}/validation.csv')
 
@@ -27,7 +27,7 @@ valid_generator = DataGenerator(valid_csv, batch_size=1, shuffle=False)
 # If the model does not exist: Initiate model, else reload previous model
 if not os.path.isdir(MODELPATH):
     os.makedirs(BASEPATH + '/model', exist_ok=True)
-    model = build_model(weights=None, dropout=0.5)
+    model = build_model(weights=None, dropout=0.25)
 elif os.path.isdir(MODELPATH):
     model = keras.models.load_model(MODELPATH, compile=False)
 else:
@@ -46,9 +46,10 @@ cb_earlystopping = EarlyStopping(monitor='val_loss', patience=20)
 cb_reduceLR = ReduceLROnPlateau(monitor='val_loss', patience=5)
 
 # Compile model
-optimizer = keras.optimizers.Adam(learning_rate=LR)
+optimizer = keras.optimizers.Nadam(learning_rate=LR)
 model.compile(optimizer=optimizer, loss=IOU_LargeBox(),
               metrics=['mean_absolute_error'])
+
 # Fit
 history = model.fit(train_generator, validation_data = valid_generator,
           epochs=EPOCHS,

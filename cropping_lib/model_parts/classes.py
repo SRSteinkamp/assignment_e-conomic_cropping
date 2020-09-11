@@ -20,20 +20,24 @@ def build_model(weights='imagenet', dropout=0.25):
     """
 
 
-    base = keras.applications.MobileNet(input_shape=(224,224,3),
+    base = keras.applications.MobileNetV2(input_shape=(224,224,3),
                                             include_top=False, weights=weights)
 
     model = keras.Sequential([base,
                               keras.layers.Conv2D(filters=128, kernel_size=(3,3)),
                               keras.layers.BatchNormalization(),
                               keras.layers.Activation('relu'),
-                              keras.layers.Conv2D(filters=16, kernel_size=(3,3)),
+                              keras.layers.Conv2D(filters=64, kernel_size=(3,3)),
                               keras.layers.BatchNormalization(),
                               keras.layers.Activation('relu'),
-                              keras.layers.Flatten(),
-                              keras.layers.Dense(24, activation='relu'),
+                              keras.layers.Conv2D(filters=32, kernel_size=(3,3)),
+                              keras.layers.Activation('relu'),
                               keras.layers.Dropout(dropout),
-                              keras.layers.Dense(8, activation='sigmoid'),
+                              keras.layers.Conv2D(filters=8, kernel_size=(1,1)),
+                              keras.layers.Dropout(dropout),
+                              keras.layers.Activation('elu'),
+                              keras.layers.Flatten(),
+                              keras.layers.Dense(8, activation='sigmoid')
                               ])
 
     return model
@@ -48,7 +52,8 @@ class IOU_LargeBox(tf.keras.losses.Loss):
 
     def call(self, y_true, y_pred):
         """Selects the largest bounding box of the predictions and the
-           ground truth and calculates the iou_loss between them.
+           ground truth and calculates the iou_loss between them. And adds the
+           MAE to it (to optimize the other coordinates).
 
         Args:
             y_true (tf.tensor): Ground truth
@@ -76,7 +81,7 @@ class IOU_LargeBox(tf.keras.losses.Loss):
         # Approximating corners of bounding box
         iou = giou_loss(box_true, box_pred, mode='giou')
 
-        return iou
+        return iou + keras.losses.MSE(y_true, y_pred)
 
     def get_config(self):
         # based on handson ML 2 p.386, to save loss with model
