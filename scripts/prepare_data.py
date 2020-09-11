@@ -48,10 +48,10 @@ for n, ii in enumerate(cropped_coords['ftype'].unique()):
 
 # Split data into train and test file
 train_val, test = train_test_split(cropped_coords, stratify=cropped_coords['ftype'],
-                                   test_size=0.1, random_state=29)
+                                   test_size=0.1, random_state=9)
 # Train and validation data
 train, validation = train_test_split(train_val, stratify=train_val['ftype'],
-                                     test_size=0.1, random_state=9)
+                                     test_size=0.1, random_state=11)
 
 # Move stratified files to corresponding folders
 for set_csv, set_name in zip([train, test, validation],

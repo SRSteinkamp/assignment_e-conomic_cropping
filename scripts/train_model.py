@@ -11,7 +11,7 @@ from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
 from tensorflow.keras.callbacks import ModelCheckpoint
 
 # %% Training settings
-LR = 0.01 # Learning Rate
+LR = 0.001 # Learning Rate
 EPOCHS = 5000 # Number of Epochs
 BASEPATH = check_working_dir(os.path.realpath(__file__))
 DATAPATH = BASEPATH + '/data/' # Data Location
@@ -27,7 +27,7 @@ valid_generator = DataGenerator(valid_csv, batch_size=1, shuffle=False)
 # If the model does not exist: Initiate model, else reload previous model
 if not os.path.isdir(MODELPATH):
     os.makedirs(BASEPATH + '/model', exist_ok=True)
-    model = build_model(weights=None, dropout=0.25)
+    model = build_model(weights='imagenet', dropout=0.25)
 elif os.path.isdir(MODELPATH):
     model = keras.models.load_model(MODELPATH, compile=False)
 else:
@@ -46,8 +46,8 @@ cb_earlystopping = EarlyStopping(monitor='val_loss', patience=20)
 cb_reduceLR = ReduceLROnPlateau(monitor='val_loss', patience=5)
 
 # Compile model
-optimizer = keras.optimizers.Nadam(learning_rate=LR)
-model.compile(optimizer=optimizer, loss=IOU_LargeBox(),
+optimizer = keras.optimizers.Adam(learning_rate=LR)
+model.compile(optimizer=optimizer, loss=IOU_TwoBox(),
               metrics=['mean_absolute_error'])
 
 # Fit

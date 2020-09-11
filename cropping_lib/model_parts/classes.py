@@ -7,7 +7,6 @@ from tensorflow import keras
 from tensorflow_addons.losses import giou_loss
 # %%
 
-
 def build_model(weights='imagenet', dropout=0.25):
     """
     Creates the model used in the training loop.
@@ -18,7 +17,6 @@ def build_model(weights='imagenet', dropout=0.25):
     Returns:
         [keras model]: The un-compiled model.
     """
-
 
     base = keras.applications.MobileNetV2(input_shape=(224,224,3),
                                             include_top=False, weights=weights)
@@ -35,7 +33,7 @@ def build_model(weights='imagenet', dropout=0.25):
                               keras.layers.Dropout(dropout),
                               keras.layers.Conv2D(filters=8, kernel_size=(1,1)),
                               keras.layers.Dropout(dropout),
-                              keras.layers.Activation('elu'),
+                              keras.layers.Activation('relu'),
                               keras.layers.Flatten(),
                               keras.layers.Dense(8, activation='sigmoid')
                               ])
@@ -123,7 +121,9 @@ class IOU_TwoBox(tf.keras.losses.Loss):
         box1_loss = giou_loss(box1_true, box1_pred, mode='giou')
         box2_loss = giou_loss(box2_true, box2_pred, mode='giou')
 
-        return (box1_loss + box2_loss)  + keras.losses.MAPE(y_true, y_pred)
+        error = keras.losses.MAE(y_true, y_pred) * 10
+
+        return (box1_loss + box2_loss  + IOU_LargeBox()(y_true, y_pred)) / 3 + error
 
     def get_config(self):
         # based on handson ML 2 p.386, to save loss with model
