@@ -71,9 +71,32 @@ Then there is also `predict_cli.py` which can be used to predict images in a fol
 ```
 predict_cli.py /data/demonstration/ model/mobilenetv2
 ```
-Does image prediction in the demonstration folder.
+Does image prediction in the demonstration folder. The `model/mobilenetv2` is already present in the repository for immediate use.
 
 **Warning in the current implementation, the predictions are written inside the input-path, and predictions are simply numbered (single file prediction might also be a problem).**
 
-### Content of cropping_lib
-cropping_lib.utils
+**Note:** On Windows it might be necessary to run the scripts and CLI by prepending `python scripts\` to the functions.
+
+## Content of cropping_lib
+* `cropping_libs.utils.image_utils`
+    * `load_image` - To load images
+    * `preprocess_image` - To preprocess images
+    * `scale_coords_down` - To normalize coordinates
+    * `scale_coords_up` - To rescale coordinates
+    * `create_mask` - Creates a binary mask from polygons.
+
+* `cropping_libs.utils.prepare_utils`
+    * `get_data` - Downloads dataset from URL
+    * `make_set` - Creates datasets (copying, setting up .csv files)
+    * `get_bbox_names` - Prints out the order of the bounding boxes
+    * `check_working_dir` - Enforces the use of scripts in repro dir
+
+* `cropping_libs.model_parts.predict`
+    * `make_prediction` - Preprocesses list of image in batch and performs prediction.
+    * `predict_files` - Grabs file from folder, initiates Keras model and does prediction.
+
+* `cropping_libs.model_parts.classes`
+    * `build_model` - Build the based model based on MobileNetV2
+    * `IOU_LargeBox` - Calculate loss for largest bounding box for a set of coordinates (both true and prediction)
+    * `IOU_TwoBox` - Calculates IOU loss for two bounding boxes (bottom left, top right and bottom right, top left)
+    * `DataGenerator` - DataGenerator used during training, loads and preprocesses data
