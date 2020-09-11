@@ -8,6 +8,7 @@ from cropping_lib.model_parts import predict_files
 from tqdm.auto import tqdm
 import argparse
 
+
 def main(IMAGEPATH, MODELPATH):
     rescaled, images = predict_files(IMAGEPATH, MODELPATH)
     print(rescaled)
@@ -23,7 +24,10 @@ def main(IMAGEPATH, MODELPATH):
         # Draw the prediction
         draw.line(tuple(map(tuple, poly_test)), fill='green', width=3)
 
-        im.save(f'{IMAGEPATH}/img_{n}_bbox.png')
+        if os.path.isdir(IMAGEPATH):
+            im.save(f'{IMAGEPATH}/img_{n}_bbox.png')
+        elif os.path.isfile(IMAGEPATH):
+            im.save(f'{os.path.dirname(IMAGEPATH)}/img{n}_bbox.png')
 
 
 if __name__ == "__main__":
