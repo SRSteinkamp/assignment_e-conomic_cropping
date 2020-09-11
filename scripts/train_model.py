@@ -9,8 +9,8 @@ from cropping_lib.model_parts import DataGenerator, IOU_TwoBox
 from cropping_lib.model_parts import IOU_LargeBox, build_model
 
 # %% Training settings
-LR = 0.001 # Learning Rate
-EPOCHS = 1 # Number of Epochs
+LR = 0.01 # Learning Rate
+EPOCHS = 5000 # Number of Epochs
 BASEPATH = check_working_dir(os.path.realpath(__file__))
 DATAPATH = BASEPATH + '/data/' # Data Location
 MODELPATH = BASEPATH + '/model/mobilenetv2/' # The model to load
@@ -19,13 +19,13 @@ train_csv = pd.read_csv(f'{DATAPATH}/train.csv')
 valid_csv = pd.read_csv(f'{DATAPATH}/validation.csv')
 
 # Data generators for training and validation
-train_generator = DataGenerator(train_csv, batch_size=7)
-valid_generator = DataGenerator(valid_csv, batch_size=7, shuffle=False)
+train_generator = DataGenerator(train_csv, batch_size=20, shuffle=True)
+valid_generator = DataGenerator(valid_csv, batch_size=1, shuffle=False)
 
 # If the model does not exist: Initiate model, else reload previous model
 if not os.path.isdir(MODELPATH):
     os.makedirs(BASEPATH + '/model', exist_ok=True)
-    model = build_model(weights='imagenet', dropout=0.5)
+    model = build_model(weights=None, dropout=0.5)
 elif os.path.isdir(MODELPATH):
     model = keras.models.load_model(MODELPATH, compile=False)
 else:
@@ -39,13 +39,13 @@ cb_checkpoint = tf.keras.callbacks.ModelCheckpoint(
     mode='min',
     save_best_only=True)
 # Early stopping to prevent overfitting
-cb_earlystopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=10)
+cb_earlystopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=20)
 # There is more fancy stuff out there, let's just leave it with this
 cb_reduceLR = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_loss', patience=5)
 
 # Compile model
 optimizer = keras.optimizers.Adam(learning_rate=LR)
-model.compile(optimizer=optimizer, loss=IOU_TwoBox(),
+model.compile(optimizer=optimizer, loss=keras.losses.Huber(),
               metrics=['mean_absolute_error'])
 # Fit
 history = model.fit(train_generator, validation_data = valid_generator,

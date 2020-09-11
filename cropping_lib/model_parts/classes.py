@@ -12,18 +12,19 @@ def build_model(weights='imagenet', dropout=0.25):
     base = keras.applications.MobileNetV2(input_shape=(224,224,3),
                                       include_top=False, weights=weights)
     model = keras.Sequential([base,
-                              keras.layers.Conv2D(filters=32, kernel_size=(3,3,),
-                                                  activation='relu'),
-                              keras.layers.Conv2D(filters=24, kernel_size=(3,3,),
-                                                  activation='relu'),
+                              keras.layers.Conv2D(filters=128, kernel_size=(3,3)),
                               keras.layers.BatchNormalization(),
-                              keras.layers.Conv2D(filters=12, kernel_size=(3,3,),
-                                                  activation='relu'),
+                              keras.layers.Activation('relu'),
+                              keras.layers.Conv2D(filters=16, kernel_size=(3,3)),
+                              keras.layers.BatchNormalization(),
+                              keras.layers.Activation('relu'),
+                              keras.layers.Flatten(),
+                              keras.layers.Dense(24, activation='relu'),
                               keras.layers.Dropout(dropout),
-                              keras.layers.Conv2D(filters=8, kernel_size=(1,1,),
-                                                  activation='sigmoid'),
-                              keras.layers.Flatten()])
+                              keras.layers.Dense(8, activation='sigmoid'),
+                              ])
 
+    model.summary()
     return model
 
 
@@ -53,8 +54,7 @@ class IOU_LargeBox(tf.keras.losses.Loss):
         # Approximating corners of bounding box
         iou = giou_loss(box_true, box_pred, mode='giou')
 
-        return iou
-
+        return iou  + keras.losses.Huber()(y_true, y_pred)
     def get_config(self):
         # based on handson ML 2 p.386, to save loss with model
         base_config = super().get_config()
@@ -84,7 +84,7 @@ class IOU_TwoBox(tf.keras.losses.Loss):
         box1_loss = giou_loss(box1_true, box1_pred, mode='giou')
         box2_loss = giou_loss(box2_true, box2_pred, mode='giou')
 
-        return (box1_loss + box2_loss) / 3 + IOU_LargeBox()(y_true, y_pred) / 3
+        return (box1_loss + box2_loss)  + keras.losses.MAPE(y_true, y_pred)
 
     def get_config(self):
         # based on handson ML 2 p.386, to save loss with model
@@ -137,7 +137,6 @@ class DataGenerator(keras.utils.Sequence):
             coords = self.image_csv.iloc[idx][self.bbox_order].values.ravel()
             # normalize
             coords = scale_coords_down(coords, width, height)
-
             X.append(img)
             y.append(coords)
 

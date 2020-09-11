@@ -10,6 +10,7 @@ import argparse
 
 def main(IMAGEPATH, MODELPATH):
     rescaled, images = predict_files(IMAGEPATH, MODELPATH)
+    print(rescaled)
 
     for n, im in tqdm(enumerate(images)):
 
