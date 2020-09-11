@@ -1,4 +1,3 @@
-import pytest
 import os
 import numpy as np
 from cropping_lib.utils import scale_coords_up, preprocess_image
@@ -56,8 +55,8 @@ def test_preprocess_image():
 def test_create_mask():
     # Draw the mask, with a single entry in middle (drawing polygon)
     mask = create_mask([1, 1, 2, 2],
-                       [1, 2, 1, 2], (3,3))
+                       [1, 2, 1, 2], (3, 3))
 
-    assert np.allclose(mask.shape, (3,3))
+    assert np.allclose(mask.shape, (3, 3))
     assert mask[1, 1] == 1
     assert mask.sum() == 1

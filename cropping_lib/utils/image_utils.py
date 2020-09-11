@@ -1,7 +1,7 @@
-from PIL import Image, ImageOps
+from PIL import Image
 import numpy as np
-from skimage.draw import polygon, polygon2mask
-from tensorflow import keras
+from skimage.draw import polygon
+
 
 def load_image(img_path):
     """Load Pillow image and transform to RGB

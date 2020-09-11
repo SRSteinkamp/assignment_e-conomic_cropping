@@ -3,7 +3,7 @@ import os
 import shutil
 import pandas as pd
 from sklearn.model_selection import train_test_split
-from cropping_lib.utils import get_data, make_set, check_working_dir
+from cropping_lib.utils import make_set, check_working_dir
 # %% Setting up Paths
 BASEPATH = check_working_dir(os.path.realpath(__file__))
 
@@ -31,7 +31,7 @@ bad_images = ['IMG_1518.jpg', 'IMG_2146.jpg', 'IMG_7086.jpg', 'IMG_7909.jpg',
               '65f85a4512fb87931a0bbaa1a9289c30-image.jpg',
               'IMG_6877.jpg', 'IMG_9754.jpg', 'IMG_9837.jpeg',
               '78ff591eccabd016385d6eabf54a0236-image.jpg',
-               'f1fd2a6215e73c3656ec63254c3446a3-image.png']
+              'f1fd2a6215e73c3656ec63254c3446a3-image.png']
 
 
 # Reading data, adding a factor for stratification (fileype)
@@ -42,9 +42,9 @@ cropped_coords['ftype'] = cropped_coords.Filename.str.split('.', expand=True)[1]
 bad_index = cropped_coords.Filename.isin(bad_images)
 # Remove bad images:
 cropped_coords = cropped_coords[bad_index == 0]
-#%% There's definetely a more elegant way, relabel filetypes
+# %% There's definetely a more elegant way, relabel filetypes
 for n, ii in enumerate(cropped_coords['ftype'].unique()):
-    cropped_coords.loc[cropped_coords.ftype==ii, 'ftype'] = n
+    cropped_coords.loc[cropped_coords.ftype == ii, 'ftype'] = n
 
 # Split data into train and test file
 train_val, test = train_test_split(cropped_coords, stratify=cropped_coords['ftype'],
@@ -58,11 +58,11 @@ for set_csv, set_name in zip([train, test, validation],
                              ['train', 'test', 'validation']):
     # Create folder
     os.makedirs(BASEPATH + f'/data/{set_name}', exist_ok=True)
-    make_set(set_csv, set_name, PATH, BASEPATH + f'/data/')
+    make_set(set_csv, set_name, PATH, BASEPATH + '/data/')
 
 
 # Move bad images to another folder as demonstrations set:
-os.makedirs(BASEPATH + f'/data/demonstration', exist_ok=True)
+os.makedirs(BASEPATH + '/data/demonstration', exist_ok=True)
 
 for fname in bad_images:
-    shutil.copy(f'{PATH}{fname}', BASEPATH + f'/data/demonstration')
+    shutil.copy(f'{PATH}{fname}', BASEPATH + '/data/demonstration')

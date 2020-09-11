@@ -1,9 +1,7 @@
 # %%
 import os
-import pandas as pd
-from PIL import Image, ImageDraw, ImageFont
+from PIL import ImageDraw
 import numpy as np
-from cropping_lib.utils import get_bbox_names
 from cropping_lib.model_parts import predict_files
 from tqdm.auto import tqdm
 import argparse
@@ -36,7 +34,6 @@ if __name__ == "__main__":
     parser.add_argument(
         dest='path_in', help='Path to the Image(s)', type=str)
     parser.add_argument(dest='path_model', help='Location of the model', type=str)
-
 
     args = parser.parse_args()
     main(args.path_in, args.path_model)

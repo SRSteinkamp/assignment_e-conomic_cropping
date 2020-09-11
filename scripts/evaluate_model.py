@@ -1,7 +1,7 @@
 # %%
 import os
 import pandas as pd
-from PIL import Image, ImageDraw, ImageFont
+from PIL import ImageDraw
 import numpy as np
 from cropping_lib.utils import get_bbox_names, create_mask, check_working_dir
 from cropping_lib.model_parts import predict_files
@@ -28,7 +28,7 @@ for n, im in tqdm(enumerate(images)):
     poly[:, 1] = im.height - poly[:, 1]
     draw = ImageDraw.Draw(im)
     # Draw the ground truth
-    draw.line(tuple(map(tuple, poly)), fill='red',  width=5)
+    draw.line(tuple(map(tuple, poly)), fill='red', width=5)
 
     # Draw the predicted box
     poly_test = rescaled[n].reshape(-1, 2).tolist()

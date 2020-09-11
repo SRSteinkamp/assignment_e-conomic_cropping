@@ -6,17 +6,17 @@ import matplotlib.pyplot as plt
 from tensorflow import keras
 from cropping_lib.utils import check_working_dir
 from cropping_lib.model_parts import DataGenerator, IOU_TwoBox
-from cropping_lib.model_parts import IOU_LargeBox, build_model
+from cropping_lib.model_parts import build_model
 from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
 from tensorflow.keras.callbacks import ModelCheckpoint
 
 # %% Training settings
-LR = 0.001 # Learning Rate
-EPOCHS = 5000 # Number of Epochs
+LR = 0.001  # Learning Rate
+EPOCHS = 5000  # Number of Epochs
 BASEPATH = check_working_dir(os.path.realpath(__file__))
-DATAPATH = BASEPATH + '/data/' # Data Location
-MODELPATH = BASEPATH + '/model/mobilenetv2/' # The model to load
-MODELNAME = BASEPATH + '/model/mobilenetv2/' # The model to save
+DATAPATH = BASEPATH + '/data/'  # Data Location
+MODELPATH = BASEPATH + '/model/mobilenetv2/'  # The model to load
+MODELNAME = BASEPATH + '/model/mobilenetv2/'  # The model to save
 train_csv = pd.read_csv(f'{DATAPATH}/train.csv')
 valid_csv = pd.read_csv(f'{DATAPATH}/validation.csv')
 
@@ -34,8 +34,7 @@ else:
     raise IOError('Provide the correct model path')
 
 # Prepare callbacks: Checkpoint to iteratively save model (just in case)
-cb_checkpoint = ModelCheckpoint(
-                                filepath= MODELPATH,
+cb_checkpoint = ModelCheckpoint(filepath=MODELPATH,
                                 save_weights_only=False,
                                 monitor='val_loss',
                                 mode='min',
@@ -51,9 +50,9 @@ model.compile(optimizer=optimizer, loss=IOU_TwoBox(),
               metrics=['mean_absolute_error'])
 
 # Fit
-history = model.fit(train_generator, validation_data = valid_generator,
-          epochs=EPOCHS,
-          callbacks=[cb_checkpoint, cb_earlystopping, cb_reduceLR])
+history = model.fit(train_generator, validation_data=valid_generator,
+                    epochs=EPOCHS,
+                    callbacks=[cb_checkpoint, cb_earlystopping, cb_reduceLR])
 
 # Recompile model with tf.keras.loss function, so that there are no issues
 # when later loading the model without custom losses
@@ -61,7 +60,7 @@ model.compile(optimizer=optimizer, loss='mean_squared_error')
 # And finally save the model
 model.save(MODELNAME)
 # %% Create figure from model history
-fig, axes = plt.subplots(1, 2, figsize=(15,5))
+fig, axes = plt.subplots(1, 2, figsize=(15, 5))
 axes[0].plot(history.history['loss'])
 axes[0].plot(history.history['val_loss'])
 axes[0].legend(['loss', 'validation loss'])

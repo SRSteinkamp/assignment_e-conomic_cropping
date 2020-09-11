@@ -1,11 +1,12 @@
 # %%
 from ..utils import load_image, preprocess_image, scale_coords_down
-from ..utils import scale_coords_up, get_bbox_names
+from ..utils import get_bbox_names
 import numpy as np
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow_addons.losses import giou_loss
 # %%
+
 
 def build_model(weights='imagenet', dropout=0.25):
     """
@@ -18,20 +19,19 @@ def build_model(weights='imagenet', dropout=0.25):
         [keras model]: The un-compiled model.
     """
 
-    base = keras.applications.MobileNetV2(input_shape=(224,224,3),
-                                            include_top=False, weights=weights)
-
+    base = keras.applications.MobileNetV2(input_shape=(224, 224, 3),
+                                          include_top=False, weights=weights)
     model = keras.Sequential([base,
-                              keras.layers.Conv2D(filters=128, kernel_size=(3,3)),
+                              keras.layers.Conv2D(filters=128, kernel_size=(3, 3)),
                               keras.layers.BatchNormalization(),
                               keras.layers.Activation('relu'),
-                              keras.layers.Conv2D(filters=64, kernel_size=(3,3)),
+                              keras.layers.Conv2D(filters=64, kernel_size=(3, 3)),
                               keras.layers.BatchNormalization(),
                               keras.layers.Activation('relu'),
-                              keras.layers.Conv2D(filters=32, kernel_size=(3,3)),
+                              keras.layers.Conv2D(filters=32, kernel_size=(3, 3)),
                               keras.layers.Activation('relu'),
                               keras.layers.Dropout(dropout),
-                              keras.layers.Conv2D(filters=8, kernel_size=(1,1)),
+                              keras.layers.Conv2D(filters=8, kernel_size=(1, 1)),
                               keras.layers.Dropout(dropout),
                               keras.layers.Activation('relu'),
                               keras.layers.Flatten(),
@@ -81,14 +81,9 @@ class IOU_LargeBox(tf.keras.losses.Loss):
 
         return iou + keras.losses.MSE(y_true, y_pred)
 
-    def get_config(self):
-        # based on handson ML 2 p.386, to save loss with model
-        base_config = super().get_config()
-        return {**base_config}
-
 
 class IOU_TwoBox(tf.keras.losses.Loss):
-    def __init__(self, box1_index=[7,6,3,2], box2_index=[5,0,1,4], **kwargs):
+    def __init__(self, box1_index=[7, 6, 3, 2], box2_index=[5, 0, 1, 4], **kwargs):
         """Uses the eight coordinates to create two bounding boxes, based on
         bottom left, and top right, as well as bottom right and top left. The
         loss for theses bounding boxes is then calculated.
@@ -123,13 +118,13 @@ class IOU_TwoBox(tf.keras.losses.Loss):
 
         error = keras.losses.MAE(y_true, y_pred) * 10
 
-        return (box1_loss + box2_loss  + IOU_LargeBox()(y_true, y_pred)) / 3 + error
+        return (box1_loss + box2_loss + IOU_LargeBox()(y_true, y_pred)) / 3 + error
 
     def get_config(self):
         # based on handson ML 2 p.386, to save loss with model
         base_config = super().get_config()
-        return {**base_config, "box1_index" : self.box1_index,
-                               "box2_index" : self.box2_index}
+        return {**base_config, "box1_index": self.box1_index,
+                               "box2_index": self.box2_index}
 
 
 class DataGenerator(keras.utils.Sequence):
@@ -153,19 +148,19 @@ class DataGenerator(keras.utils.Sequence):
 
     def __len__(self):
         # Calculate the lenght of the generator (i.e. number of batches in epoch)
-        return int(np.floor(self.image_csv.shape[0]/ self.batch_size))
+        return int(np.floor(self.image_csv.shape[0] / self.batch_size))
 
     def on_epoch_end(self):
         # Indices = number of files in there (even if it's df)
         self.indexes = np.arange(self.image_csv.shape[0])
 
         # shuffle, if wanted
-        if self.shuffle == True:
+        if self.shuffle:
             np.random.shuffle(self.indexes)
 
     def __getitem__(self, index):
         # Create indices (shuffled)
-        indexes = self.indexes[index * self.batch_size : (index + 1) * self.batch_size]
+        indexes = self.indexes[index * self.batch_size: (index + 1) * self.batch_size]
 
         X, y = self.__data_generation(indexes)
 

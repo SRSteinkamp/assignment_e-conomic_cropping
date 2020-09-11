@@ -1,9 +1,7 @@
 from tensorflow import keras
-from ..utils import preprocess_image, load_image, scale_coords_down
-from ..utils import scale_coords_up
+from ..utils import preprocess_image, load_image, scale_coords_up
 import numpy as np
 import os
-from tqdm.auto import tqdm
 from glob import glob
 
 
@@ -19,7 +17,7 @@ def make_prediction(images, model):
         [list]: Predictions of the model, in this case a len(images) x 8 batch.
     """
     image_batch = np.array([preprocess_image(im.copy(),
-                                            target_size=(224,224))
+                                             target_size=(224, 224))
                             for im in images])
 
     if image_batch.ndim == 3:
@@ -55,7 +53,7 @@ def predict_files(FILEPATH, MODELPATH):
         # Glob for .png, .jpeg, .jpg
         images = []
         for suff in ['.jpg', '.jpeg', '.png']:
-            images.extend(glob(FILEPATH  + '/*' + suff))
+            images.extend(glob(FILEPATH + '/*' + suff))
     else:
         raise IOError(f"File or path: {FILEPATH} not found!")
 
