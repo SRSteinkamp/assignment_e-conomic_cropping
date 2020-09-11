@@ -5,12 +5,24 @@ import numpy as np
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow_addons.losses import giou_loss
+# %%
 
 
 def build_model(weights='imagenet', dropout=0.25):
-    # Create the model in the training loop
-    base = keras.applications.MobileNetV2(input_shape=(224,224,3),
-                                      include_top=False, weights=weights)
+    """
+    Creates the model used in the training loop.
+    Args:
+        weights (str, optional): Whether to use imagenet pretraiing or no weights. Defaults to 'imagenet'.
+        dropout (float, optional): Dropout in the last layer. Defaults to 0.25.
+
+    Returns:
+        [keras model]: The un-compiled model.
+    """
+
+
+    base = keras.applications.MobileNet(input_shape=(224,224,3),
+                                            include_top=False, weights=weights)
+
     model = keras.Sequential([base,
                               keras.layers.Conv2D(filters=128, kernel_size=(3,3)),
                               keras.layers.BatchNormalization(),
@@ -24,17 +36,27 @@ def build_model(weights='imagenet', dropout=0.25):
                               keras.layers.Dense(8, activation='sigmoid'),
                               ])
 
-    model.summary()
     return model
 
 
 class IOU_LargeBox(tf.keras.losses.Loss):
     def __init__(self, **kwargs):
+        """ Loss function optimizing the largest possible bounding box in the
+            image.
+        """
         super().__init__(**kwargs)
 
     def call(self, y_true, y_pred):
-        # IOU needs: [y_min, x_min, y_max, x_max]
-        # Extract min and max bounding boxes for prediction
+        """Selects the largest bounding box of the predictions and the
+           ground truth and calculates the iou_loss between them.
+
+        Args:
+            y_true (tf.tensor): Ground truth
+            y_pred (tf.tensor): Predictions
+
+        Returns:
+            [tf.tensor]: IOU loss for largest bounding box
+        """
         x_min_pred = tf.reduce_min(y_pred[:, ::2], axis=1)
         x_max_pred = tf.reduce_max(y_pred[:, ::2], axis=1)
         y_min_pred = tf.reduce_min(y_pred[:, 1::2], axis=1)
@@ -54,7 +76,8 @@ class IOU_LargeBox(tf.keras.losses.Loss):
         # Approximating corners of bounding box
         iou = giou_loss(box_true, box_pred, mode='giou')
 
-        return iou  + keras.losses.Huber()(y_true, y_pred)
+        return iou
+
     def get_config(self):
         # based on handson ML 2 p.386, to save loss with model
         base_config = super().get_config()
@@ -63,17 +86,28 @@ class IOU_LargeBox(tf.keras.losses.Loss):
 
 class IOU_TwoBox(tf.keras.losses.Loss):
     def __init__(self, box1_index=[7,6,3,2], box2_index=[5,0,1,4], **kwargs):
+        """Uses the eight coordinates to create two bounding boxes, based on
+        bottom left, and top right, as well as bottom right and top left. The
+        loss for theses bounding boxes is then calculated.
+
+        Args:
+            box1_index (list, optional): Indices for bounding box 1. Defaults to [7,6,3,2].
+            box2_index (list, optional): Indices for bounding box 2. Defaults to [5,0,1,4].
+        """
         self.box1_index = box1_index
         self.box2_index = box2_index
         super().__init__(**kwargs)
 
     def call(self, y_true, y_pred):
-        # IOU needs: [y_min, x_min, y_max, x_max]
-        # Input is:
-        # TopLeftX,TopLeftY,TopRightX,TopRightY,BottomRightX,BottomRightY,BottomLeftX,BottomLeftY
-        #    0         1        2          3        4           5           6           7
-        # IOU should perform better than MSE
-        # Get box1
+        """Calculate sum of the two bounding boxes.
+
+        Args:
+            y_true (tf.tensor): Ground truth
+            y_pred (tf.tensor): Predictions
+
+        Returns:
+            [tf.tensor]: The loss calculated for the two bounding boxes.
+        """
         box1_true = tf.gather(y_true, self.box1_index, axis=1)
         box1_pred = tf.gather(y_pred, self.box1_index, axis=1)
         # Get box 2
@@ -96,6 +130,15 @@ class IOU_TwoBox(tf.keras.losses.Loss):
 class DataGenerator(keras.utils.Sequence):
 
     def __init__(self, image_csv, image_size=(224, 224), batch_size=1, shuffle=False):
+        """Data generator for validation and training.
+
+        Args:
+            image_csv (pd.DataFrame): Dataframe with absolute path to images in
+                                      "Filename", and bounding boxe locations.
+            image_size (tuple, optional): Target size of images. Defaults to (224, 224).
+            batch_size (int, optional): Batch size. Defaults to 1.
+            shuffle (bool, optional): Whether to shuffle before creating batches. Defaults to False.
+        """
         self.image_csv = image_csv
         self.batch_size = batch_size
         self.shuffle = shuffle

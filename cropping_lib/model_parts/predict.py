@@ -8,9 +8,16 @@ from glob import glob
 
 
 def make_prediction(images, model):
-    '''
-    Preprocesses data and runs them through the provided model.
-    '''
+    """Makes a prediction given a list of imags. First creates the batch by
+       preprocessing the images and in the end returns the prediction.
+
+    Args:
+        images ([list, PIL.Image]): List of PIL Images files, or a single PIL Image
+        model ([keras.model]): A keras model, that can be used for predictions.
+
+    Returns:
+        [list]: Predictions of the model, in this case a len(images) x 8 batch.
+    """
     image_batch = np.array([preprocess_image(im.copy(),
                                             target_size=(224,224))
                             for im in images])
@@ -24,11 +31,21 @@ def make_prediction(images, model):
 
 
 def predict_files(FILEPATH, MODELPATH):
-    '''
-    Function later exposed to cli, to read in a single filename or a folder
-    and do prediction on the images.
-    '''
-    # Load model
+    """Searches for files in FILEPATH and load the model given by MODELPATH,
+       runs make_predictions and returns the rescaled predictions and images.
+
+    Args:
+        FILEPATH ([str]): Path to the file, or folder of which the images are to
+                          be taken.
+        MODELPATH ([str]): Path to the keras model.
+
+    Raises:
+        IOError: If FILEPATH is not found.
+
+    Returns:
+        [np.array, list]: Returns the predictions for the images which were
+                          which were provided in FILEPATH
+    """
     model = keras.models.load_model(MODELPATH)
 
     if os.path.isfile(FILEPATH):
