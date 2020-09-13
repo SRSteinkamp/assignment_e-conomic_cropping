@@ -51,9 +51,8 @@ class CenterLoss(tf.keras.losses.Loss):
         super().__init__(**kwargs)
 
     def call(self, y_true, y_pred):
-        """Selects the largest bounding box of the predictions and the
-           ground truth and calculates the iou_loss between them. And adds the
-           MAE to it (to optimize the other coordinates).
+        """Selects the largest bounding box of the predictions and ground truth,
+        returns the squared error of the difference of centers.
 
         Args:
             y_true (tf.tensor): Ground truth
@@ -164,15 +163,41 @@ class IOU_TwoBox(tf.keras.losses.Loss):
 
         box_loss = (box1_loss + box2_loss) / 2
 
-        return (box_loss + IOU_LargeBox()(y_true, y_pred) +
-                CenterLoss()(y_true, y_pred) +
-                tf.keras.losses.MSE(y_true, y_pred))
+        return box_loss
 
     def get_config(self):
         # based on handson ML 2 p.386, to save loss with model
         base_config = super().get_config()
         return {**base_config, "box1_index": self.box1_index,
                                "box2_index": self.box2_index}
+
+
+class CombinedLoss(tf.keras.losses.Loss):
+    def __init__(self, **kwargs):
+        """Combines bounding box losses and MSE
+        """
+        super().__init__(**kwargs)
+
+    def call(self, y_true, y_pred):
+        """Combined loss function
+
+        Args:
+            y_true (tf.tensor): Ground truth
+            y_pred (tf.tensor): Predictions
+
+        Returns:
+            [tf.tensor]: The combined loss.
+        """
+
+        box_loss = IOU_LargeBox()(y_true, y_pred) + IOU_TwoBox()(y_true, y_pred)
+        cent_loss = CenterLoss()(y_true, y_pred)
+        error = tf.keras.losses.MSE(y_true, y_pred)
+        return box_loss + cent_loss + error
+
+    def get_config(self):
+        # based on handson ML 2 p.386, to save loss with model
+        base_config = super().get_config()
+        return {**base_config}
 
 
 class DataGenerator(keras.utils.Sequence):

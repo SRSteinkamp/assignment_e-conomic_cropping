@@ -1,4 +1,4 @@
-from cropping_lib.model_parts import DataGenerator, IOU_TwoBox
+from cropping_lib.model_parts import DataGenerator, IOU_TwoBox, CombinedLoss
 from cropping_lib.model_parts import build_model, IOU_LargeBox, CenterLoss
 import pandas as pd
 import tensorflow as tf
@@ -34,6 +34,14 @@ def test_CenterLoss():
                           [0.1, 0.9, 0.9, 0.9, 0.9, 0.1, 0.1, 0.1]])
 
     assert np.isclose(0, np.sum(CenterLoss()(boxes1, boxes1)))
+
+
+def test_CombinedLoss():
+    # Test if iou_wrapper provides results:
+    boxes1 = tf.constant([[0.1, 0.9, 0.9, 0.9, 0.9, 0.1, 0.1, 0.1],
+                          [0.1, 0.9, 0.9, 0.9, 0.9, 0.1, 0.1, 0.1]])
+
+    assert np.isclose(0, np.sum(CombinedLoss()(boxes1, boxes1)))
 
 
 def test_smoke_model():

@@ -9,7 +9,7 @@ from tqdm.auto import tqdm
 from sklearn.metrics import jaccard_score
 # %%
 BASEPATH = check_working_dir(os.path.realpath(__file__))
-MODELPATH = BASEPATH + '/model/customnetv1/'
+MODELPATH = BASEPATH + '/model/mobilenetv2/'
 EVALPATH = BASEPATH + f'/evaluation_images/{MODELPATH.split("/")[-2]}'
 test_csv = pd.read_csv(BASEPATH + '/data/test.csv').sort_values('Filename')
 

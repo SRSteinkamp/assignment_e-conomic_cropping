@@ -47,7 +47,7 @@ cb_reduceLR = ReduceLROnPlateau(monitor='val_loss', patience=5, verbose=1,
 
 # Compile model
 optimizer = keras.optimizers.Adam(learning_rate=LR)
-model.compile(optimizer=optimizer, loss=IOU_TwoBox(),
+model.compile(optimizer=optimizer, loss=CombinedLoss(),
               metrics=[IOU_LargeBox(), 'mean_absolute_error'])
 
 # Fit
