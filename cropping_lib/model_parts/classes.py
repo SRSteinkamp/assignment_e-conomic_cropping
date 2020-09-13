@@ -1,44 +1,91 @@
-# %%
 from ..utils import load_image, preprocess_image, scale_coords_down
 from ..utils import get_bbox_names
 import numpy as np
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow_addons.losses import giou_loss
-# %%
 
 
 def build_model(weights='imagenet', dropout=0.25):
-    """
-    Creates the model used in the training loop.
+    """Creates the model used in the training loop.
+
     Args:
         weights (str, optional): Whether to use imagenet pretraiing or no weights. Defaults to 'imagenet'.
         dropout (float, optional): Dropout in the last layer. Defaults to 0.25.
 
     Returns:
-        [keras model]: The un-compiled model.
+        keras model: The un-compiled model.
     """
+    #base = keras.applications.MobileNetV2(input_shape=(224, 224, 3),
+    #                                      include_top=False, weights=weights)
+    def simple_block(fs, ks, inps):
+        block = [keras.layers.Conv2D(fs, kernel_size=(ks, ks), padding='same',
+                 input_shape = (inps, inps, 3)),
+                 keras.layers.BatchNormalization(),
+                 keras.layers.LeakyReLU(),
+                 keras.layers.MaxPool2D()]
 
-    base = keras.applications.MobileNetV2(input_shape=(224, 224, 3),
-                                          include_top=False, weights=weights)
-    model = keras.Sequential([base,
-                              keras.layers.Conv2D(filters=128, kernel_size=(3, 3)),
-                              keras.layers.BatchNormalization(),
-                              keras.layers.Activation('relu'),
-                              keras.layers.Conv2D(filters=64, kernel_size=(3, 3)),
-                              keras.layers.BatchNormalization(),
-                              keras.layers.Activation('relu'),
-                              keras.layers.Conv2D(filters=32, kernel_size=(3, 3)),
-                              keras.layers.Activation('relu'),
-                              keras.layers.Dropout(dropout),
-                              keras.layers.Conv2D(filters=8, kernel_size=(1, 1)),
-                              keras.layers.Dropout(dropout),
-                              keras.layers.Activation('relu'),
+        return block
+
+    base_block = []
+
+    for ks, fs, inps in zip([7, 5, 5, 3, 3, 3],
+                            [16, 32, 64, 128, 128, 256],
+                            [224, 112, 56, 28, 14 ,7]):
+        base_block.extend(simple_block(fs, ks, inps))
+
+    model = keras.Sequential([*base_block,
                               keras.layers.Flatten(),
-                              keras.layers.Dense(8, activation='sigmoid')
-                              ])
+                              keras.layers.Dense(100, activation='elu'),
+                              keras.layers.Dropout(dropout),
+                              keras.layers.Dense(8, activation='sigmoid')])
 
+    print(model.summary())
     return model
+
+
+class CenterLoss(tf.keras.losses.Loss):
+    def __init__(self, **kwargs):
+        """ Loss function optimizing the largest possible bounding box in the
+            image.
+        """
+        super().__init__(**kwargs)
+
+    def call(self, y_true, y_pred):
+        """Selects the largest bounding box of the predictions and the
+           ground truth and calculates the iou_loss between them. And adds the
+           MAE to it (to optimize the other coordinates).
+
+        Args:
+            y_true (tf.tensor): Ground truth
+            y_pred (tf.tensor): Predictions
+
+        Returns:
+            [tf.tensor]: IOU loss for largest bounding box
+        """
+        # Bounding box for pred
+        x_min_pred = tf.reduce_min(y_pred[:, ::2], axis=1)
+        x_max_pred = tf.reduce_max(y_pred[:, ::2], axis=1)
+        y_min_pred = tf.reduce_min(y_pred[:, 1::2], axis=1)
+        y_max_pred = tf.reduce_max(y_pred[:, 1::2], axis=1)
+        # Bounding box for truth
+        x_min_true = tf.reduce_min(y_true[:, ::2], axis=1)
+        x_max_true = tf.reduce_max(y_true[:, ::2], axis=1)
+        y_min_true = tf.reduce_min(y_true[:, 1::2], axis=1)
+        y_max_true = tf.reduce_max(y_true[:, 1::2], axis=1)
+        # Calculate boxes
+        x_mid_pred = x_min_pred + (x_max_pred - x_min_pred) / 2
+        y_mid_pred = y_min_pred + (y_max_pred - y_min_pred) / 2
+        x_mid_true = x_min_true + (x_max_true - x_min_true) / 2
+        y_mid_true = y_min_true + (y_max_true - y_min_true) / 2
+        # Approximating corners of bounding box
+
+        center_pred = tf.stack([x_mid_pred, y_mid_pred], axis=1)
+        center_true = tf.stack([x_mid_true, y_mid_true], axis=1)
+
+        center_loss = keras.losses.MAPE(center_true, center_pred)
+
+        return center_loss
 
 
 class IOU_LargeBox(tf.keras.losses.Loss):
@@ -79,7 +126,7 @@ class IOU_LargeBox(tf.keras.losses.Loss):
         # Approximating corners of bounding box
         iou = giou_loss(box_true, box_pred, mode='giou')
 
-        return iou + keras.losses.MSE(y_true, y_pred)
+        return iou
 
 
 class IOU_TwoBox(tf.keras.losses.Loss):
@@ -116,9 +163,11 @@ class IOU_TwoBox(tf.keras.losses.Loss):
         box1_loss = giou_loss(box1_true, box1_pred, mode='giou')
         box2_loss = giou_loss(box2_true, box2_pred, mode='giou')
 
-        error = keras.losses.MAE(y_true, y_pred) * 10
+        box_loss = (box1_loss + box2_loss) / 2
 
-        return (box1_loss + box2_loss + IOU_LargeBox()(y_true, y_pred)) / 3 + error
+        return (box_loss + IOU_LargeBox()(y_true,y_pred) +
+                CenterLoss()(y_true, y_pred) +
+                tf.keras.losses.MAPE(y_true, y_pred))
 
     def get_config(self):
         # based on handson ML 2 p.386, to save loss with model
