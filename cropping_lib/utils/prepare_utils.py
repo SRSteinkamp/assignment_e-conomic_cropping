@@ -78,6 +78,6 @@ def check_working_dir(script_location):
 
     if os.getcwd() != parent_dir:
         raise EnvironmentError("Please make sure you execute script in "
-                                + parent_dir + "!")
+                               + parent_dir + "!")
     else:
         return parent_dir
