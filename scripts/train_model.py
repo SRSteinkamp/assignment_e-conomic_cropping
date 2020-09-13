@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from tensorflow import keras
 from cropping_lib.utils import check_working_dir
 from cropping_lib.model_parts import DataGenerator, IOU_TwoBox, IOU_LargeBox
-from cropping_lib.model_parts import build_model
+from cropping_lib.model_parts import build_model, CombinedLoss, build_model_mobilenet
 from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
 from tensorflow.keras.callbacks import ModelCheckpoint
 
@@ -15,8 +15,8 @@ LR = 0.01  # Learning Rate
 EPOCHS = 5000  # Number of Epochs
 BASEPATH = check_working_dir(os.path.realpath(__file__))
 DATAPATH = BASEPATH + '/data/'  # Data Location
-MODELPATH = BASEPATH + '/model/customnetv1/'  # The model to load
-MODELNAME = BASEPATH + '/model/customnetv1/'  # The model to save
+MODELPATH = BASEPATH + '/model/mobilenetv3/'  # The model to load
+MODELNAME = BASEPATH + '/model/mobilenetv3/'  # The model to save
 train_csv = pd.read_csv(f'{DATAPATH}/train.csv')
 valid_csv = pd.read_csv(f'{DATAPATH}/validation.csv')
 

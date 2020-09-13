@@ -1,5 +1,6 @@
 from cropping_lib.model_parts import DataGenerator, IOU_TwoBox, CombinedLoss
 from cropping_lib.model_parts import build_model, IOU_LargeBox, CenterLoss
+from cropping_lib.model_parts import build_model_mobilenet
 import pandas as pd
 import tensorflow as tf
 import numpy as np
@@ -46,4 +47,9 @@ def test_CombinedLoss():
 
 def test_smoke_model():
     bn = build_model(weights=None)
+    bn.compile(optimizer='sgd', loss='mean_squared_error')
+
+
+def test_smoke_model_mobile():
+    bn = build_model_mobilenet(weights=None)
     bn.compile(optimizer='sgd', loss='mean_squared_error')
