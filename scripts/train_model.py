@@ -11,17 +11,17 @@ from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
 from tensorflow.keras.callbacks import ModelCheckpoint
 
 # %% Training settings
-LR = 0.005  # Learning Rate
+LR = 0.01  # Learning Rate
 EPOCHS = 5000  # Number of Epochs
 BASEPATH = check_working_dir(os.path.realpath(__file__))
 DATAPATH = BASEPATH + '/data/'  # Data Location
-MODELPATH = BASEPATH + '/model/customnetv0/'  # The model to load
-MODELNAME = BASEPATH + '/model/customnetv0/'  # The model to save
+MODELPATH = BASEPATH + '/model/customnetv1/'  # The model to load
+MODELNAME = BASEPATH + '/model/customnetv1/'  # The model to save
 train_csv = pd.read_csv(f'{DATAPATH}/train.csv')
 valid_csv = pd.read_csv(f'{DATAPATH}/validation.csv')
 
 # Data generators for training and validation
-train_generator = DataGenerator(train_csv, batch_size=10, shuffle=True)
+train_generator = DataGenerator(train_csv, batch_size=16, shuffle=True)
 valid_generator = DataGenerator(valid_csv, batch_size=1, shuffle=False)
 
 # If the model does not exist: Initiate model, else reload previous model
@@ -42,7 +42,8 @@ cb_checkpoint = ModelCheckpoint(filepath=MODELPATH,
 # Early stopping to prevent overfitting
 cb_earlystopping = EarlyStopping(monitor='val_loss', patience=15)
 # There is more fancy stuff out there, let's just leave it with this
-cb_reduceLR = ReduceLROnPlateau(monitor='val_loss', patience=5)
+cb_reduceLR = ReduceLROnPlateau(monitor='val_loss', patience=5, verbose=1,
+                               factor=0.5)
 
 # Compile model
 optimizer = keras.optimizers.Adam(learning_rate=LR)

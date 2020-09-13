@@ -9,8 +9,8 @@ from tqdm.auto import tqdm
 from sklearn.metrics import jaccard_score
 # %%
 BASEPATH = check_working_dir(os.path.realpath(__file__))
-MODELPATH = BASEPATH + '/model/mobilenetv2/'
-EVALPATH = BASEPATH + f'/evaluation_images/{MODELPATH.split("/")[-1]}'
+MODELPATH = BASEPATH + '/model/customnetv1/'
+EVALPATH = BASEPATH + f'/evaluation_images/{MODELPATH.split("/")[-2]}'
 test_csv = pd.read_csv(BASEPATH + '/data/test.csv').sort_values('Filename')
 
 os.makedirs(EVALPATH, exist_ok=True)
@@ -48,7 +48,7 @@ for n, im in tqdm(enumerate(images)):
 
     evaluation_dict['Img'].append(test_csv.iloc[n]['Filename'])
     evaluation_dict['IOU'].append(score)
-    im.save(f'{EVALPATH}{test_csv.iloc[n]["Filename"].split("/")[-1]}')
+    im.save(f'{EVALPATH}/{test_csv.iloc[n]["Filename"].split("/")[-1]}')
 
 evaluation_dict = pd.DataFrame(evaluation_dict)
 evaluation_dict.to_csv(f'{EVALPATH}/scores.csv')

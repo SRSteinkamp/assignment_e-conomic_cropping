@@ -22,7 +22,7 @@ def build_model(weights='imagenet', dropout=0.25):
         block = [keras.layers.Conv2D(fs, kernel_size=(ks, ks), padding='same',
                  input_shape = (inps, inps, 3), kernel_initializer='he_normal'),
                  keras.layers.BatchNormalization(),
-                 keras.layers.PReLU(),
+                 keras.layers.LeakyReLU(),
                  keras.layers.MaxPool2D()]
 
         return block
@@ -30,12 +30,14 @@ def build_model(weights='imagenet', dropout=0.25):
     base_block = []
 
     for ks, fs, inps in zip([7, 5, 3, 3, 3, 3, 3],
-                            [8, 16, 32, 64, 128, 256, 512],
+                            [8, 16, 32, 64, 128, 128, 256],
                             [224, 112, 56, 28, 14 ,7, 3]):
         base_block.extend(simple_block(fs, ks, inps))
 
     model = keras.Sequential([*base_block,
                               keras.layers.Flatten(),
+                              keras.layers.Dense(25, activation='relu'),
+                              keras.layers.Dropout(dropout),
                               keras.layers.Dense(8, activation='sigmoid')])
 
     print(model.summary())
@@ -80,7 +82,7 @@ class CenterLoss(tf.keras.losses.Loss):
         center_pred = tf.stack([x_mid_pred, y_mid_pred], axis=1)
         center_true = tf.stack([x_mid_true, y_mid_true], axis=1)
 
-        center_loss = keras.losses.MAE(center_true, center_pred)
+        center_loss = keras.losses.MSE(center_true, center_pred)
 
         return center_loss
 
@@ -162,9 +164,9 @@ class IOU_TwoBox(tf.keras.losses.Loss):
 
         box_loss = (box1_loss + box2_loss) / 2
 
-        return (box_loss + IOU_LargeBox()(y_true,y_pred) +
+        return (box_loss + IOU_LargeBox()(y_true, y_pred) +
                 CenterLoss()(y_true, y_pred) +
-                tf.keras.losses.MAE(y_true, y_pred) * 2)
+                tf.keras.losses.MSE(y_true, y_pred))
 
     def get_config(self):
         # based on handson ML 2 p.386, to save loss with model
