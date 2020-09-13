@@ -71,7 +71,7 @@ Then there is also `predict_cli.py` which can be used to predict images in a fol
 ```
 predict_cli.py /data/demonstration/ model/mobilenetv2
 ```
-Does image prediction in the demonstration folder. The `model/mobilenetv2` is already present in the repository for immediate use.
+Does image prediction in the demonstration folder. The `model/mobilenetv2` and `model/customnetv1` are already present in the repository for immediate use. Where the latter provides better results.
 
 **Warning in the current implementation, the predictions are written inside the input-path, and predictions are simply numbered (single file prediction might also be a problem).**
 
@@ -96,7 +96,12 @@ Does image prediction in the demonstration folder. The `model/mobilenetv2` is al
     * `predict_files` - Grabs file from folder, initiates Keras model and does prediction.
 
 * `cropping_libs.model_parts.classes`
-    * `build_model` - Build the based model based on MobileNetV2
     * `IOU_LargeBox` - Calculate loss for largest bounding box for a set of coordinates (both true and prediction)
     * `IOU_TwoBox` - Calculates IOU loss for two bounding boxes (bottom left, top right and bottom right, top left)
+    * `CenterLoss` - Calculates MSE for center coordinates of largest bounding box
+    * `CombinedLoss` - Calculate loss based on IOUs, center and MSE
     * `DataGenerator` - DataGenerator used during training, loads and preprocesses data
+
+* `cropping_libs.model_parts.model_architecture`
+    * `build_model_mobilenet` - Build the based model based on MobileNetV2
+    * `build_model` - build custom CNN
